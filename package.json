@@ -16,6 +16,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@supabase/supabase-js": "^2.43.2",
 		"papaparse": "^5.4.1"
 	}
 }

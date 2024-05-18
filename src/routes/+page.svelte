@@ -1,16 +1,26 @@
 <script>
     export let data;
-    // console.log("Images:", data.images);
+    // console.log(data.menu.name[2]);
 </script>
 
-<div class="grid">
-    {#each data.filename as filename, index}
-        <div class="box">
-            <img src={`/images/${filename}`} alt="sushi" />
-            <h1>{data.name[index]}</h1>
-        </div>
-    {/each}
-</div>
+{#each data.category.id as id, i}
+    <h1>{data.category.name[i]}</h1>
+    <div class="grid">
+        {#each data.menu.category_id as category_id, j}
+            {#if category_id === id}
+                <div class="box">
+                    <img
+                        src={`${data.menu.img_url[j]}`}
+                        alt="sushi"
+                        width="100%"
+                    />
+                    <h2>{data.menu.name[j]}</h2>
+                    <p>{data.menu.price[j]}</p>
+                </div>
+            {/if}
+        {/each}
+    </div>
+{/each}
 
 <style>
     @import url("https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300&display=swap");
@@ -19,10 +29,10 @@
         background-color: #a6a6a6;
     }
 
-    h1 {
+    h1,
+    p {
         font-family: "Noto Sans", sans-serif;
         font-size: 16px;
-        text-align: center;
     }
 
     .grid {
