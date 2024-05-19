@@ -172,7 +172,6 @@
 </form>
 
 <hr />
-<br />
 
 <h2>Menu</h2>
 <hr />

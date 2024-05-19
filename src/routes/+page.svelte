@@ -4,7 +4,7 @@
 </script>
 
 {#each data.category.id as id, i}
-    <h1>{data.category.name[i]}</h1>
+    <h2>{data.category.name[i]}</h2>
     <div class="grid">
         {#each data.menu.category_id as category_id, j}
             {#if category_id === id}
@@ -14,7 +14,7 @@
                         alt="sushi"
                         width="100%"
                     />
-                    <h2>{data.menu.name[j]}</h2>
+                    <h3>{data.menu.name[j]}</h3>
                     <p>{data.menu.price[j]}</p>
                 </div>
             {/if}
