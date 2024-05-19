@@ -1,3 +1,4 @@
+import { SUPABASE_URL } from "$env/static/private";
 import supabase from "$lib/db";
 
 export async function POST({ request }) {
@@ -16,10 +17,13 @@ export async function POST({ request }) {
                 .from("menu")
                 .delete()
                 .eq("img_url", fd.remove_id);
-            // TODO: Images aren't removed?
+
+            const basePath = `${SUPABASE_URL}/storage/v1/object/public/menu-images/`;
+            const filename = fd.remove_id.replace(basePath, "");
+
             const { error_1 } = await supabase.storage
                 .from("menu-images")
-                .remove([fd.remove_id]);
+                .remove([filename]);
         } else {
             console.error("Incorrect table_mode!");
         }
@@ -30,13 +34,31 @@ export async function POST({ request }) {
                 amount: fd.category_amount,
             });
         } else if (fd.table_mode === 1) {
-            const { error_0 } = await supabase
+            // Remove all images
+            const { data, error_0 } = await supabase
+                .from("menu")
+                .select("*")
+                .eq("category_id", fd.remove_id);
+
+            let imagesToRemove = [];
+            for (const item of data) {
+                const basePath = `${SUPABASE_URL}/storage/v1/object/public/menu-images/`;
+                const filename = item.img_url.replace(basePath, "");
+
+                imagesToRemove.push(filename);
+            }
+
+            const { error_1 } = await supabase.storage
+                .from("menu-images")
+                .remove(imagesToRemove);
+
+            // Remove all items
+            const { error_2 } = await supabase
                 .from("categories")
                 .delete()
                 .eq("id", fd.remove_id);
 
-            // TODO: This doesn't delete the image associated with the item
-            const { error_1 } = await supabase
+            const { error_3 } = await supabase
                 .from("menu")
                 .delete()
                 .eq("category_id", fd.remove_id);

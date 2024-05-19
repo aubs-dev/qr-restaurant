@@ -24,14 +24,16 @@
         const isFileValid = tableID === 0 ? file.files[0] !== undefined : true;
         const isMenuNameValid =
             tableID === 0 ? formData.menu_name !== "" : true;
+        // const isMenuNameUnique =
+        // tableID == 0 ? !data.menu.name.includes(formData.menu_name) : true;
         const isCategoryIdValid =
             tableID === 0
                 ? data.category.id.includes(formData.category_id)
                 : true;
 
-        let isCategoryNameValid =
+        const isCategoryNameValid =
             tableID === 1 ? formData.category_name !== "" : true;
-        isCategoryNameValid =
+        const isCategoryNameUnique =
             tableID === 1
                 ? !data.category.name.includes(formData.category_name)
                 : true;
@@ -39,8 +41,10 @@
         if (
             isFileValid &&
             isMenuNameValid &&
+            // isMenuNameUnique &&
             isCategoryIdValid &&
-            isCategoryNameValid
+            isCategoryNameValid &&
+            isCategoryNameUnique
         ) {
             if (tableID == 0) {
                 const fd = new FormData();
@@ -82,54 +86,74 @@
         });
     }
 
+    function add_overlay() {
+        const overlay = document.getElementById("loading-menu");
+        overlay.style.display = "";
+    }
+
+    function do_reload() {
+        setTimeout(() => {
+            window.location.reload();
+        }, 350);
+    }
+
     async function handle_menu() {
+        add_overlay();
         await add_data(0);
-        window.location.reload();
+        do_reload();
     }
 
     async function handle_category() {
+        add_overlay();
         await add_data(1);
-        window.location.reload();
+        do_reload();
     }
 
-    async function handle_remove(event, tableID, itemID) {
-        // Hide visual item once pressed
-        event.target.parentNode.parentNode.style.display = "none";
-
+    async function handle_remove(tableID, itemID) {
+        add_overlay();
         await remove_data(tableID, itemID);
-        window.location.reload();
+        do_reload();
     }
 
-    // TODO: look into handling removing the submission button on bad input (bug)
-    function hide_button(event) {
-        // Hide button once pressed
-        event.target.style.display = "none";
+    async function nuke_database() {
+        const isConfirmed = confirm(
+            "Are you sure you want to delete the entire database? This action cannot be undone."
+        );
+
+        add_overlay();
+
+        if (isConfirmed) {
+            const response = await fetch("/api/nuke", {
+                method: "POST",
+                body: {},
+            });
+        }
+
+        do_reload();
     }
 </script>
 
-<mark>Delete database (WARNING Irreversible):</mark>
-<button on:click={() => alert("That was close :P")}>delete</button>
+<h1>ADMIN MENU</h1>
 
-<h2>info: removing a category removes all its items</h2>
-<h1>[ Category ]</h1>
+<h2>Category</h2>
+<hr />
 {#if data.category.name[0]}
-    <hr />
+    <mark>notice: removing a category removes all its items</mark>
     {#each data.category.name as name, index}
         <div class="visual-item">
             <button
                 class="remove-button"
-                on:click={(event) =>
-                    handle_remove(event, 1, data.category.id[index])}
+                on:click={() => handle_remove(1, data.category.id[index])}
             >
                 <img src="remove.svg" alt="remove item" />
             </button>
             <p>{name}</p>
         </div>
     {/each}
-    <hr />
 {:else}
-    <h2>- no categories found</h2>
+    <mark>no categories found</mark>
 {/if}
+<hr />
 
 <form on:submit={handle_category}>
     <label>
@@ -144,32 +168,48 @@
         Amount: <input type="number" bind:value={formData.category_amount} />
     </label>
     <br />
-    <button type="submit" on:click={(event) => hide_button(event)}
-        >Submit</button
-    >
+    <button type="submit">Add Category</button>
 </form>
 
+<hr />
 <br />
 
-<h1>[ Menu ]</h1>
-{#if data.menu.name[0]}
-    <hr />
-    {#each data.menu.name as name, index}
-        <div class="visual-item">
-            <button
-                class="remove-button"
-                on:click={(event) =>
-                    handle_remove(event, 0, data.menu.img_url[index])}
-            >
-                <img src="remove.svg" alt="remove item" />
-            </button>
-            <p>{name}</p>
-        </div>
-    {/each}
-    <hr />
+<h2>Menu</h2>
+<hr />
+{#if data.category.name[0]}
+    {#if data.menu.name[0]}
+        {#each data.category.id as id, category_index}
+            <h3>( {data.category.name[category_index]} )</h3>
+            {#if data.menu.category_id.includes(id)}
+                {#each data.menu.name as name, index}
+                    {#if data.menu.category_id[index] === id}
+                        <div class="visual-item">
+                            <button
+                                class="remove-button"
+                                on:click={(event) =>
+                                    handle_remove(
+                                        event,
+                                        0,
+                                        data.menu.img_url[index]
+                                    )}
+                            >
+                                <img src="remove.svg" alt="remove item" />
+                            </button>
+                            <p>{name}</p>
+                        </div>
+                    {/if}
+                {/each}
+            {:else}
+                <mark>category is empty</mark>
+            {/if}
+        {/each}
+    {:else}
+        <mark>no items found</mark>
+    {/if}
 {:else}
-    <h2>- no items found</h2>
+    <mark>no categories found</mark>
 {/if}
+<hr />
 
 <form on:submit={handle_menu}>
     <label>
@@ -183,7 +223,11 @@
     </label>
     <br />
     <label>
-        Name: <input required type="text" bind:value={formData.menu_name} />
+        Name (no duplicates per category): <input
+            required
+            type="text"
+            bind:value={formData.menu_name}
+        />
     </label>
     <br />
     <label>
@@ -199,10 +243,16 @@
         </select>
     </label>
     <br />
-    <button type="submit" on:click={(event) => hide_button(event)}
-        >Submit</button
-    >
+    <button type="submit">Add Item</button>
 </form>
+
+<hr />
+<br />
+
+<mark>Delete database (WARNING Irreversible):</mark>
+<button on:click={nuke_database}>delete</button>
+
+<div id="loading-menu" class="overlay" style="display: none;">Loading</div>
 
 <style>
     .visual-item {
@@ -214,5 +264,20 @@
 
     .visual-item > *:not(:first-child) {
         padding-left: 10px;
+    }
+
+    .overlay {
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-size: 64px;
+        background-color: rgba(1, 1, 1, 0.75);
+        bottom: 0;
+        left: 0;
+        position: fixed;
+        right: 0;
+        top: 0;
     }
 </style>
