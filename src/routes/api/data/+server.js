@@ -12,10 +12,14 @@ export async function POST({ request }) {
                 category_id: fd.category_id,
             });
         } else if (fd.table_mode === 1) {
-            const { error } = await supabase
+            const { error_0 } = await supabase
                 .from("menu")
                 .delete()
                 .eq("img_url", fd.remove_id);
+            // TODO: Images aren't removed?
+            const { error_1 } = await supabase.storage
+                .from("menu-images")
+                .remove([fd.remove_id]);
         } else {
             console.error("Incorrect table_mode!");
         }
@@ -26,10 +30,16 @@ export async function POST({ request }) {
                 amount: fd.category_amount,
             });
         } else if (fd.table_mode === 1) {
-            const { error } = await supabase
+            const { error_0 } = await supabase
                 .from("categories")
                 .delete()
                 .eq("id", fd.remove_id);
+
+            // TODO: This doesn't delete the image associated with the item
+            const { error_1 } = await supabase
+                .from("menu")
+                .delete()
+                .eq("category_id", fd.remove_id);
         } else {
             console.error("Incorrect table_mode!");
         }

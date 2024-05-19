@@ -42,7 +42,7 @@
             isCategoryIdValid &&
             isCategoryNameValid
         ) {
-            {
+            if (tableID == 0) {
                 const fd = new FormData();
                 fd.append("file", file.files[0]);
 
@@ -56,15 +56,13 @@
                 formData.img_url = result.url;
             }
 
-            {
-                const response = await fetch("/api/data", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(formData),
-                });
-            }
+            const response = await fetch("/api/data", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
         } else {
             alert("Incorrect form input, try again.");
         }
@@ -94,12 +92,25 @@
         window.location.reload();
     }
 
-    async function handle_remove(tableID, itemID) {
+    async function handle_remove(event, tableID, itemID) {
+        // Hide visual item once pressed
+        event.target.parentNode.parentNode.style.display = "none";
+
         await remove_data(tableID, itemID);
         window.location.reload();
     }
+
+    // TODO: look into handling removing the submission button on bad input (bug)
+    function hide_button(event) {
+        // Hide button once pressed
+        event.target.style.display = "none";
+    }
 </script>
 
+<mark>Delete database (WARNING Irreversible):</mark>
+<button on:click={() => alert("That was close :P")}>delete</button>
+
+<h2>info: removing a category removes all its items</h2>
 <h1>[ Category ]</h1>
 {#if data.category.name[0]}
     <hr />
@@ -107,7 +118,8 @@
         <div class="visual-item">
             <button
                 class="remove-button"
-                on:click={() => handle_remove(1, data.category.id[index])}
+                on:click={(event) =>
+                    handle_remove(event, 1, data.category.id[index])}
             >
                 <img src="remove.svg" alt="remove item" />
             </button>
@@ -115,6 +127,8 @@
         </div>
     {/each}
     <hr />
+{:else}
+    <h2>- no categories found</h2>
 {/if}
 
 <form on:submit={handle_category}>
@@ -130,7 +144,9 @@
         Amount: <input type="number" bind:value={formData.category_amount} />
     </label>
     <br />
-    <button type="submit">Submit</button>
+    <button type="submit" on:click={(event) => hide_button(event)}
+        >Submit</button
+    >
 </form>
 
 <br />
@@ -142,7 +158,8 @@
         <div class="visual-item">
             <button
                 class="remove-button"
-                on:click={() => handle_remove(0, data.menu.img_url[index])}
+                on:click={(event) =>
+                    handle_remove(event, 0, data.menu.img_url[index])}
             >
                 <img src="remove.svg" alt="remove item" />
             </button>
@@ -150,6 +167,8 @@
         </div>
     {/each}
     <hr />
+{:else}
+    <h2>- no items found</h2>
 {/if}
 
 <form on:submit={handle_menu}>
@@ -158,6 +177,7 @@
             required
             type="file"
             accept="image/jpeg,image/png"
+            autocomplete="off"
             bind:this={file}
         />
     </label>
@@ -179,7 +199,9 @@
         </select>
     </label>
     <br />
-    <button type="submit">Submit</button>
+    <button type="submit" on:click={(event) => hide_button(event)}
+        >Submit</button
+    >
 </form>
 
 <style>
