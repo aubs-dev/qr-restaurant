@@ -248,12 +248,27 @@
 <hr />
 <br />
 
-<mark>Delete database (WARNING Irreversible):</mark>
-<button on:click={nuke_database}>delete</button>
+<!-- <mark>Delete database (WARNING Irreversible):</mark>
+<button on:click={nuke_database}>delete</button> -->
 
 <div id="loading-menu" class="overlay" style="display: none;">Loading</div>
 
 <style>
+    @import url("https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+    h1,
+    h2,
+    h3 {
+        font-family: "Roboto Slab", serif;
+    }
+
+    mark,
+    label,
+    p {
+        font-family: "Poppins", sans-serif;
+    }
+
     .visual-item {
         display: flex;
         flex-direction: row;
